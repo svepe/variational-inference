@@ -58,16 +58,19 @@ if __name__ == '__main__':
     opt_traj = grad_descent((5.0, -4.0), p_params, 0.02, 350)
 
     # This code visualises the gradient descent
-    fig = plt.figure(figsize=(22, 8))
-    ax_fit = fig.add_subplot(1, 2, 1)
+    fig = plt.figure(figsize=(12, 8))
+    ax_fit = plt.subplot2grid((5, 5), (1, 0), colspan=1, rowspan=3)
     ax_fit.set_xlim([-10, 10])
-    ax_fit.set_ylim(bottom=0)
+    ax_fit.set_ylim([0., 0.6])
     x = np.linspace(-10, 10, 800)
     y = stats.norm.pdf(x, p_params[0], np.exp(p_params[1]))
     ax_fit.fill_between(x, 0, y, color='#aaaaaa')
     fit_artist = ax_fit.plot([], [], color='#f3c273', linewidth=3.0)
+    ax_fit.legend(handles=[Patch(color='#aaaaaa', label='$p(x)$'),
+                           Patch(color='#f3c273', label='$q(x)$')],
+                  framealpha=0.3)
 
-    ax_grad = fig.add_subplot(1, 2, 2, projection='3d', azim=-73.0, elev=25.0)
+    ax_grad = plt.subplot2grid((5, 5), (0, 1), colspan=4, rowspan=5, projection='3d', azim=-73.0, elev=25.0)
     ax_grad.set_title('Gradient Descent')
     ax_grad.set_xlabel('Mean')
     ax_grad.set_ylabel('log(Variance)')
@@ -85,13 +88,14 @@ if __name__ == '__main__':
     ax_grad.contour(
         X, Y, Z, zdir='z', offset=-50, cmap=cm.coolwarm, levels=np.linspace(0, 30, 30))
 
+    plt.tight_layout()
     for t in range(len(opt_traj)):
         mu, logstd, dmu, dlogstd, kl_score = opt_traj[t]
 
         # Plot new fit
         xs = np.linspace(-10, 10, 800)
         ys = stats.norm.pdf(xs, mu, np.exp(logstd))
-        ax_fit.set_title("Distribution Fit, $D_{KL} = $" + "{0:.4f}".format(kl_score))
+        ax_fit.set_title("$\mathcal{D}_{KL} = $" + "{0:.4f}".format(kl_score))
         fit_artist[0].set_data(xs, ys)
 
         # Plot gradient step
@@ -101,6 +105,6 @@ if __name__ == '__main__':
         ax_grad.add_patch(grad_step)
         art3d.pathpatch_2d_to_3d(grad_step, z=-50, zdir="z")
         # Save images in order to export a video with:
-        # ffmpeg -r 25 -i %04d_kl_normal.png kl_normal.mp4
-        # plt.savefig("figs/{0:04d}_kl_normal.png".format(t))
+        # ffmpeg -r 25 -i %04d_kl_normal.png kl_normal.webm
+        plt.savefig("figs/{0:04d}_kl_normal.png".format(t))
         plt.pause(0.001)
